@@ -6,7 +6,6 @@ function App() {
     <div>
       <h1>BGG Rank Viewer</h1>
       <DataLoader />
-      {/*<S3FileViewer />*/}
     </div>
   );
 }

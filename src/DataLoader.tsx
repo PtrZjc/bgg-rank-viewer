@@ -89,7 +89,7 @@ const DataLoader = () => {
         <div>
           <h2>Rankings for {selectedDate}</h2>
           <div>
-            <table className={"table table-sm"}>
+            <table className={"table table-lg"}>
               <thead>
                 <tr>
                   <th>Rank</th>
