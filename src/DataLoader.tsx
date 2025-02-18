@@ -1,6 +1,7 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import Papa from 'papaparse';
-import React, { PureComponent } from 'react';
+import {CartesianGrid, Line, LineChart, XAxis, YAxis} from "recharts";
+
 type GameRow = {
     rank: number;
     name: string;
@@ -15,15 +16,19 @@ type GameDayRanks = {
 const DataLoader = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [minDate, setMinDate] = useState(getDaysAgoFromToday(7));
+    const [minDate, setMinDate] = useState(getDaysAgoFromToday(7*4*6));
     const [maxDate, setMaxDate] = useState(new Date());
+    // const [minDate, setMinDate] = useState(new Date('2025-02-01'));
+    // const [maxDate, setMaxDate] = useState(new Date('2025-02-07'));
+    const [tickDaysResolution, setTickDaysResolution] = useState(7);
+    const [topRanksShowed, setTopRanksShowed] = useState(30);
     const [dataset, setDataset] = useState<GameDayRanks[]>([]);
 
     const absoluteMinDate = new Date('2024-04-01');
 
     useEffect(() => {
         loadData(getDatesInRange(minDate, maxDate));
-    }, [minDate, maxDate]);
+    }, [minDate, maxDate, tickDaysResolution, topRanksShowed]);
 
     const loadData = async (dateRange: string[]) => {
         if (!dateRange.length) return;
@@ -45,7 +50,7 @@ const DataLoader = () => {
             const allGameDayRanks = results.map(({date, text}) => {
                 return new Promise<GameDayRanks>((resolve, reject) => {
                     Papa.parse(text, {
-                        preview: 50, // limit number of rows to preview
+                        preview: topRanksShowed, // limit number of rows to preview
                         header: true,
                         dynamicTyping: true,
                         skipEmptyLines: true,
@@ -60,13 +65,24 @@ const DataLoader = () => {
                 .filter((gameDayRanks) => Object.keys(gameDayRanks).length > 2);
             setDataset(processedData);
             setLoading(false);
-
-            console.log('processedData:', processedData);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Unknown error occurred');
             setLoading(false);
         }
     };
+
+    const getGameNames = (): string[] => {
+        if (dataset.length === 0) return [];
+
+        // Get all keys except 'day' from the first data point
+        const firstDataPoint = dataset[0];
+        return Object.keys(firstDataPoint).filter(key => key !== 'day');
+    };
+
+    const lineColors = [
+        "#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F",
+        "#FFBB28", "#FF8042", "#0088FE", "#00C49F", "#FFBB28"
+    ];
 
     return (
         <div>
@@ -90,12 +106,58 @@ const DataLoader = () => {
                     onChange={(e) => setMaxDate(new Date(e.target.value))}
                 />
             </div>
+            <div>
+                <label>Select date resolution:</label>
+                <input
+                    type="number"
+                    value={tickDaysResolution}
+                    min="1"
+                    max="100"
+                    onChange={(e) => setTickDaysResolution(Number(e.target.value))}
+                />
+            </div>
+            <div>
+                <label>Select top ranks showed:</label>
+                <input
+                    type="number"
+                    value={topRanksShowed}
+                    min="1"
+                    max="500"
+                    onChange={(e) => setTopRanksShowed(Number(e.target.value))}
+                />
+            </div>
 
 
             {loading && <div>Loading data...</div>}
             {error && <div>Error: {error}</div>}
             {dataset.length > 0 && !loading && !error && (
-                <div>something worked</div>
+                <LineChart
+                    width={1000}
+                    height={500}
+                    data={dataset}
+                    margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                    }}
+                >
+                    <CartesianGrid strokeDasharray="3 3"/>
+                    <XAxis dataKey="day"/>
+                    <YAxis/>
+                    {/*<Tooltip/>*/}
+                    {/*<Legend/>*/}
+                    {getGameNames().map((gameName, index) => (
+                        <Line
+                            key={gameName}
+                            type="monotone"
+                            dataKey={gameName}
+                            name={gameName}
+                            stroke={lineColors[index % lineColors.length]}
+                            activeDot={{r: 8}}
+                        />
+                    ))}
+                </LineChart>
             )
             }
         </div>
@@ -108,14 +170,34 @@ const DataLoader = () => {
 
     function getDatesInRange(startDate: Date, endDate: Date): string[] {
         const dates: Date[] = [];
-        const currentDate = new Date(startDate);
+        const dayDifference = getDayDifference(startDate, endDate) + 1; // both start and end dates are inclusive
+        const leftoverDays = dayDifference % tickDaysResolution;
+
+        // Adjust start date by subtracting leftover days to get perfect intervals
+
+        let currentDate = getDateWithOffset(startDate, -leftoverDays);
         while (currentDate <= endDate) {
             dates.push(new Date(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
+            currentDate = getDateWithOffset(currentDate, tickDaysResolution);
         }
 
-        return dates.map(date => date.toISOString().split('T')[0]);
+        const dateStrings = dates.map(date => date.toISOString().split('T')[0]);
+        return dateStrings;
+
+        function getDayDifference(date1: Date, date2: Date) {
+            const oneDayMillis = 24 * 60 * 60 * 1000;
+            const firstDate = new Date(date1);
+            const secondDate = new Date(date2);
+            return Math.round(Math.abs(+secondDate - +firstDate) / oneDayMillis);
+        }
+
+        function getDateWithOffset(initialDate: Date, dayDifference: number): Date {
+            const newDate = new Date(initialDate);
+            newDate.setDate(initialDate.getDate() + dayDifference);
+            return newDate;
+        }
     }
+
 
     function mapToGameDayRanks(rows: GameRow[], date: string): GameDayRanks {
         return rows.reduce((acc, {name, rank}) => ({
