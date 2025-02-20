@@ -1,7 +1,29 @@
 // GameChart.tsx
 import React, { useMemo } from 'react';
-import { CartesianGrid, Line, LineChart, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+    ChartOptions
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import { useGameData } from './useGameData';
+
+// Register ChartJS components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 const lineColors = [
     "#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#00C49F",
@@ -11,10 +33,73 @@ const lineColors = [
 export const GameChart: React.FC = () => {
     const { dataset, loading, error } = useGameData();
 
-    const gameNames = useMemo(() => {
-        if (dataset.length === 0) return [];
-        return Object.keys(dataset[0]).filter(key => key !== 'day');
+    const { labels, datasets } = useMemo(() => {
+        if (dataset.length === 0) return { labels: [], datasets: [] };
+
+        // Get game names (excluding 'day' field)
+        const gameNames = Object.keys(dataset[0]).filter(key => key !== 'day');
+
+        // Extract labels (dates)
+        const labels = dataset.map(entry =>
+            new Date(entry.day).toLocaleDateString()
+        );
+
+        // Create datasets for each game
+        const datasets = gameNames.map((gameName, index) => ({
+            label: gameName,
+            data: dataset.map(entry => entry[gameName] as number),
+            borderColor: lineColors[index % lineColors.length],
+            backgroundColor: lineColors[index % lineColors.length],
+            tension: 0.1,
+            pointRadius: 0,
+            pointHoverRadius: 8,
+        }));
+
+        return { labels, datasets };
     }, [dataset]);
+
+    const options: ChartOptions<'line'> = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                title: {
+                    display: true,
+                    text: 'Rank'
+                },
+                reverse: true, // Lower rank numbers are better, so reverse the scale
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
+            }
+        },
+        plugins: {
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: (context) => {
+                        return `${context.dataset.label}: Rank ${context.parsed.y}`;
+                    }
+                }
+            },
+            legend: {
+                position: 'right' as const,
+                labels: {
+                    boxWidth: 12,
+                    usePointStyle: true,
+                }
+            }
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+        }
+    };
 
     if (loading) {
         return <div className="flex items-center justify-center h-96">Loading data...</div>;
@@ -29,50 +114,11 @@ export const GameChart: React.FC = () => {
     }
 
     return (
-        <div className="w-full h-[500px]">
-            <ResponsiveContainer>
-                <LineChart
-                    data={dataset}
-                    margin={{
-                        top: 5,
-                        right: 30,
-                        left: 20,
-                        bottom: 5,
-                    }}
-                >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                        dataKey="day"
-                        tick={{ fontSize: 12 }}
-                        tickFormatter={(value) => new Date(value).toLocaleDateString()}
-                    />
-                    <YAxis
-                        tick={{ fontSize: 12 }}
-                        label={{
-                            value: 'Rank',
-                            angle: -90,
-                            position: 'insideLeft',
-                            style: { textAnchor: 'middle' }
-                        }}
-                    />
-                    <Tooltip
-                        labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                        formatter={(value, name) => [`Rank ${value}`, name]}
-                    />
-                    <Legend />
-                    {gameNames.map((gameName, index) => (
-                        <Line
-                            key={gameName}
-                            type="monotone"
-                            dataKey={gameName}
-                            name={gameName}
-                            stroke={lineColors[index % lineColors.length]}
-                            dot={false}
-                            activeDot={{ r: 8 }}
-                        />
-                    ))}
-                </LineChart>
-            </ResponsiveContainer>
+        <div className="w-[1200px] h-[2800px]">
+            <Line
+                options={options}
+                data={{ labels, datasets }}
+            />
         </div>
     );
 };
