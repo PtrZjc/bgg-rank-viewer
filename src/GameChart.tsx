@@ -1,18 +1,16 @@
-// GameChart.tsx
-import React, { useMemo } from 'react';
+import React, {useMemo} from 'react';
 import {
-    Chart as ChartJS,
     CategoryScale,
+    Chart as ChartJS,
     LinearScale,
-    PointElement,
     LineElement,
+    Plugin,
+    PointElement,
     Title,
-    Tooltip,
-    Legend,
-    ChartOptions
+    Tooltip
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import { useGameData } from './useGameData';
+import {Line} from 'react-chartjs-2';
+import {useGameData} from './useGameData';
 
 // Register ChartJS components
 ChartJS.register(
@@ -21,8 +19,7 @@ ChartJS.register(
     PointElement,
     LineElement,
     Title,
-    Tooltip,
-    Legend
+    Tooltip
 );
 
 const lineColors = [
@@ -31,20 +28,20 @@ const lineColors = [
 ];
 
 export const GameChart: React.FC = () => {
-    const { dataset, loading, error } = useGameData();
+    const {dataset, loading, error} = useGameData();
 
-    const { labels, datasets } = useMemo(() => {
-        if (dataset.length === 0) return { labels: [], datasets: [] };
+    const {labels, datasets} = useMemo(() => {
+        if (dataset.length === 0) return {labels: [], datasets: []};
 
-        // Get game names (excluding 'day' field)
-        const gameNames = Object.keys(dataset[0]).filter(key => key !== 'day');
+        // Collect all unique game names from all datasets
+        const gameNames = Array.from(new Set(
+            dataset.flatMap(entry =>
+                Object.keys(entry).filter(key => key !== 'day')
+            )
+        ));
 
-        // Extract labels (dates)
-        const labels = dataset.map(entry =>
-            new Date(entry.day).toLocaleDateString()
-        );
+        const labels = dataset.map(entry => new Date(entry.day).toLocaleDateString());
 
-        // Create datasets for each game
         const datasets = gameNames.map((gameName, index) => ({
             label: gameName,
             data: dataset.map(entry => entry[gameName] as number),
@@ -53,12 +50,43 @@ export const GameChart: React.FC = () => {
             tension: 0.1,
             pointRadius: 0,
             pointHoverRadius: 8,
+            spanGaps: true,
         }));
 
-        return { labels, datasets };
+        return {labels, datasets};
     }, [dataset]);
 
-    const options: ChartOptions<'line'> = {
+    console.log("labels", labels);
+    console.log("datasets", datasets);
+
+    // Plugin for end-of-line labels
+    const endLineLabelsPlugin: Plugin = {
+        id: 'endLineLabels',
+        afterDatasetsDraw(chart) {
+            const {ctx, scales: {x, y}} = chart;
+
+            chart.data.datasets.forEach((dataset) => {
+                const lastDataPoint = dataset.data[dataset.data.length - 1] as number;
+                if (lastDataPoint === undefined) return;
+
+                const xScale = x.getPixelForTick(dataset.data.length - 1);
+                const yScale = y.getPixelForValue(lastDataPoint);
+
+                ctx.save();
+                ctx.fillStyle = dataset.borderColor as string;
+                ctx.font = '12px Arial';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(
+                    dataset.label || '',
+                    xScale + 10,
+                    yScale
+                );
+                ctx.restore();
+            });
+        }
+    };
+
+    const options = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
@@ -67,7 +95,7 @@ export const GameChart: React.FC = () => {
                     display: true,
                     text: 'Rank'
                 },
-                reverse: true, // Lower rank numbers are better, so reverse the scale
+                reverse: true,
             },
             x: {
                 title: {
@@ -77,26 +105,22 @@ export const GameChart: React.FC = () => {
             }
         },
         plugins: {
+            legend: {
+                display: false // Hide the legend since we're using end-of-line labels
+            },
             tooltip: {
-                mode: 'index',
+                mode: 'index' as const,
                 intersect: false,
                 callbacks: {
                     label: (context) => {
                         return `${context.dataset.label}: Rank ${context.parsed.y}`;
                     }
                 }
-            },
-            legend: {
-                position: 'right' as const,
-                labels: {
-                    boxWidth: 12,
-                    usePointStyle: true,
-                }
             }
         },
         interaction: {
-            mode: 'nearest',
-            axis: 'x',
+            mode: 'nearest' as const,
+            axis: 'x' as const,
             intersect: false
         }
     };
@@ -114,10 +138,11 @@ export const GameChart: React.FC = () => {
     }
 
     return (
-        <div className="w-[1200px] h-[2800px]">
+        <div className="w-100% h-200">
             <Line
                 options={options}
-                data={{ labels, datasets }}
+                data={{labels, datasets}}
+                plugins={[endLineLabelsPlugin]}
             />
         </div>
     );
