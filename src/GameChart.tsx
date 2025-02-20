@@ -104,15 +104,6 @@ export const GameChart: React.FC = () => {
         plugins: {
             legend: {
                 display: false // Hide the legend since we're using end-of-line labels
-            },
-            tooltip: {
-                mode: 'index' as const,
-                intersect: false,
-                callbacks: {
-                    label: (context) => {
-                        return `${context.dataset.label}: Rank ${context.parsed.y}`;
-                    }
-                }
             }
         },
         interaction: {
