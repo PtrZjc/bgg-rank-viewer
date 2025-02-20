@@ -56,9 +56,6 @@ export const GameChart: React.FC = () => {
         return {labels, datasets};
     }, [dataset]);
 
-    console.log("labels", labels);
-    console.log("datasets", datasets);
-
     // Plugin for end-of-line labels
     const endLineLabelsPlugin: Plugin = {
         id: 'endLineLabels',

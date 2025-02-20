@@ -1,0 +1,86 @@
+.debug-css * {
+    outline: 1px solid rgba(255, 0, 0, .2) !important;
+}
+
+.debug-css *:hover {
+    outline: 1px solid rgba(255, 0, 0, .6) !important;
+}
+
+/* Different colors for different elements to help distinguish structure */
+.debug-css div {
+    outline: 1px solid rgba(255, 0, 0, .2) !important;
+}
+
+.debug-css section {
+    outline: 1px solid rgba(0, 255, 0, .2) !important;
+}
+
+.debug-css nav {
+    outline: 1px solid rgba(0, 0, 255, .2) !important;
+}
+
+.debug-css header {
+    outline: 1px solid rgba(255, 255, 0, .2) !important;
+}
+
+.debug-css footer {
+    outline: 1px solid rgba(255, 0, 255, .2) !important;
+}
+
+.debug-css main {
+    outline: 1px solid rgba(0, 255, 255, .2) !important;
+}
+
+.debug-css article {
+    outline: 2px solid rgba(255, 128, 0, .2) !important;
+}
+
+.debug-css aside {
+    outline: 2px solid rgba(128, 0, 255, .2) !important;
+}
+
+/* Add padding visualization */
+.debug-css *:not(body) {
+    position: relative;
+}
+
+.debug-css *:not(body):after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 255, 0.05);
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Grid and Flex visualization */
+.debug-css [class*="grid"] {
+    outline: 2px solid rgba(128, 0, 128, .2) !important;
+}
+
+.debug-css [class*="flex"] {
+    outline: 2px solid rgba(0, 128, 128, .2) !important;
+}
+
+/* Size visualization for small elements */
+.debug-css *:not(body):before {
+    content: attr(class);
+    font-size: 10px;
+    font-family: monospace;
+    position: absolute;
+    top: -14px;
+    left: 0;
+    background: rgba(0, 0, 0, .8);
+    color: white;
+    padding: 2px 4px;
+    white-space: nowrap;
+    display: none;
+    z-index: 10000;
+}
+
+.debug-css *:hover:before {
+    display: block;
+}
