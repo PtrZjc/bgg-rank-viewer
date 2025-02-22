@@ -14,6 +14,7 @@ export type GameDayRanks = {
 // Primitive atoms for controls
 export const minDateAtom = atom<Date>(getDaysAgoFromToday(7*4*6));
 export const maxDateAtom = atom<Date>(new Date());
+export const visibleGameNamesAtom = atom<string[]>([]);
 export const tickDaysResolutionAtom = atom<number>(7);
 export const topRanksShowedAtom = atom<number>(30);
 

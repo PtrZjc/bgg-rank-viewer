@@ -11,6 +11,8 @@ import {
 } from 'chart.js';
 import {Line} from 'react-chartjs-2';
 import {useGameData} from './useGameData';
+import {topRanksShowedAtom, visibleGameNamesAtom} from "./atoms.ts";
+import {useAtomValue} from "jotai";
 
 ChartJS.register(
     CategoryScale,
@@ -26,71 +28,74 @@ const lineColors = [
     "#FFBB28", "#FF8042", "#0088FE", "#00C49F", "#FFBB28"
 ];
 
-const baseOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-        y: {
-            title: {
-                display: true,
-                text: 'Rank'
-            },
-            reverse: true,
-        },
-        x: {
-            title: {
-                display: true,
-                text: 'Date'
-            }
-        }
-    },
-    plugins: {
-        legend: {
-            display: false
-        },
-        tooltip: {
-            enabled: true,
-            mode: 'dataset',
-            intersect: true,
-            callbacks: {
-                // Show only title (game name)
-                title: (contexts: TooltipItem<'line'>[]) => {
-                    if (contexts.length > 0) {
-                        return contexts[0].dataset.label;
-                    }
-                    return '';
-                },
-                // Return empty string to hide the label
-                label: () => ''
-            },
-            // Customize tooltip style
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            titleFont: {
-                size: 14,
-                weight: 'bold'
-            },
-            padding: 10,
-            displayColors: false // Hide color box
-        }
-    },
-    interaction: {
-        mode: 'dataset',
-        intersect: true,
-    },
-    hover: {
-        mode: 'dataset',
-        intersect: true
-    },
-    layout: {
-        padding: {
-            right: 100 // Fixed padding for labels
-        }
-    }
-};
-
-
 export const GameChart: React.FC = () => {
     const {dataset, loading, error} = useGameData();
+    const gameNames = useAtomValue(visibleGameNamesAtom);
+    const topRanksShowed = useAtomValue(topRanksShowedAtom);
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                max: topRanksShowed,
+                title: {
+                    display: true,
+                    text: 'Rank'
+                },
+                reverse: true,
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Date'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                enabled: true,
+                mode: 'dataset',
+                intersect: true,
+                callbacks: {
+                    // Show only title (game name)
+                    title: (contexts: TooltipItem<'line'>[]) => {
+                        if (contexts.length > 0) {
+                            return contexts[0].dataset.label;
+                        }
+                        return '';
+                    },
+                    // Return empty string to hide the label
+                    label: () => ''
+                },
+                // Customize tooltip style
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleFont: {
+                    size: 14,
+                    weight: 'bold'
+                },
+                padding: 10,
+                displayColors: false // Hide color box
+            }
+        },
+        interaction: {
+            mode: 'dataset',
+            intersect: true,
+        },
+        hover: {
+            mode: 'dataset',
+            intersect: true
+        },
+        layout: {
+            padding: {
+                right: 100 // Fixed padding for labels
+            }
+        }
+    };
+
 
     // Create plugin instance once
     // @ts-expect-error
@@ -113,7 +118,6 @@ export const GameChart: React.FC = () => {
                     ctx.moveTo(xScale, yScale);
                     ctx.lineTo(xScale + 10, yScale);
                     ctx.stroke();
-
                     ctx.fillStyle = dataset.borderColor;
                     ctx.font = '12px Arial';
                     ctx.textBaseline = 'middle';
@@ -130,12 +134,6 @@ export const GameChart: React.FC = () => {
 
     const {labels, datasets} = useMemo(() => {
         if (dataset.length === 0) return {labels: [], datasets: []};
-
-        const gameNames = Array.from(new Set(
-            dataset.flatMap(entry =>
-                Object.keys(entry).filter(key => key !== 'day')
-            )
-        )).sort();
 
         const labels = dataset.map(entry => new Date(entry.day).toLocaleDateString());
 
@@ -175,7 +173,7 @@ export const GameChart: React.FC = () => {
         <div className="w-full h-[500px]">
             <Line
                 // @ts-expect-error
-                options={baseOptions}
+                options={options}
                 data={{labels, datasets}}
                 // plugins={[endLineLabelsPlugin]}
             />

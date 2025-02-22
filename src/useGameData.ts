@@ -10,7 +10,8 @@ import {
     maxDateAtom,
     minDateAtom,
     tickDaysResolutionAtom,
-    topRanksShowedAtom
+    topRanksShowedAtom,
+    visibleGameNamesAtom
 } from './atoms';
 import Papa from "papaparse";
 
@@ -21,6 +22,7 @@ export function useGameData() {
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
     const [dataset, setDataset] = useAtom(datasetAtom);
+    const [_visibleGameNames, setVisibleGameNames] = useAtom(visibleGameNamesAtom);
     const [loading, setLoading] = useAtom(loadingAtom);
     const [error, setError] = useAtom(errorAtom);
 
@@ -31,7 +33,9 @@ export function useGameData() {
 
             try {
                 const dateRange = getDatesInRange(minDate, maxDate, tickDaysResolution);
-                const data = await fetchGameData(dateRange, topRanksShowed);
+                const data = await fetchGameData(dateRange);
+
+                setVisibleGameNames(extractVisibleGameNames(data, topRanksShowed))
                 setDataset(data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -41,7 +45,7 @@ export function useGameData() {
         };
 
         loadData();
-    }, [minDate, maxDate, tickDaysResolution, topRanksShowed, setDataset, setLoading, setError]);
+    }, [minDate, maxDate, tickDaysResolution, topRanksShowed, setVisibleGameNames, setDataset, setLoading, setError]);
 
     return {dataset, loading, error};
 }
@@ -64,7 +68,6 @@ function getDatesInRange(startDate: Date, endDate: Date, resolution: number): st
 
 async function fetchGameData(
     dateRange: string[],
-    topRanks: number
 ): Promise<GameDayRanks[]> {
     if (!dateRange.length) return [];
 
@@ -78,7 +81,6 @@ async function fetchGameData(
     const allGameDayRanks = results.map(({date, text}) => {
         return new Promise<GameDayRanks>((resolve, reject) => {
             Papa.parse(text, {
-                preview: topRanks,
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
@@ -97,4 +99,11 @@ async function fetchGameData(
 
     const processedData = await Promise.all(allGameDayRanks);
     return processedData.filter((gameDayRanks) => Object.keys(gameDayRanks).length > 2);
+}
+
+function extractVisibleGameNames(data: GameDayRanks[], topRanksShowed: number): string[] {
+    return Array.from(new Set(
+        data.flatMap(dayRanks => Object.keys(dayRanks)
+            .filter(key => Number(dayRanks[key]) < topRanksShowed))
+    ));
 }
