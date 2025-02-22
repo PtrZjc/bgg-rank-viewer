@@ -3,8 +3,10 @@ import {Provider} from 'jotai';
 import {DateRangeControls} from './DateRangeControls';
 import {GameChart} from './GameChart';
 import {DebugToggle} from "./DebugToggle.tsx";
+import {useScreenSize} from "./useScreenSize.ts";
 
 export const App: React.FC = () => {
+
     return (
         <Provider>
             <div className="max-w-7xl p-4 mx-auto">
@@ -19,7 +21,7 @@ export const App: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="rounded-lg p-4 shadow">
+                    <div className="rounded-lg p-0 lg:p-4 shadow">
                         <GameChart/>
                     </div>
                 </div>

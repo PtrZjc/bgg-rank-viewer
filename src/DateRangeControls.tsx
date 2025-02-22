@@ -36,8 +36,11 @@ export const DateRangeControls: React.FC = () => {
                     min="1"
                     max={DAYS_FROM_ZERO_DATE_TO_TODAY}
                     onChange={(e) => {
-                        debouncedSetDatapoints(Number(e.target.value))
-                        setInFormDatapointNumber(Number(e.target.value))
+                        let target = Number(e.target.value)
+                        if (target < 3) target = 3
+                        if (target > DAYS_FROM_ZERO_DATE_TO_TODAY) target = DAYS_FROM_ZERO_DATE_TO_TODAY
+                        debouncedSetDatapoints(target)
+                        setInFormDatapointNumber(target)
                     }}
                     className={inputStyle}
                 />
@@ -50,8 +53,11 @@ export const DateRangeControls: React.FC = () => {
                     min="1"
                     max="500"
                     onChange={(e) => {
-                        debouncedSetTopRanks(Number(e.target.value))
-                        setInFormTopRanksShowed(Number(e.target.value))
+                        let target = Number(e.target.value)
+                        if (target < 1) target = 1
+                        if (target > 500) target = 500
+                        debouncedSetTopRanks(target)
+                        setInFormTopRanksShowed(target)
                     }}
                     className={inputStyle}
                 />

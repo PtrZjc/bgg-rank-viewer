@@ -14,6 +14,7 @@ import {Line} from 'react-chartjs-2';
 import {useGameData} from './useGameData';
 import {topRanksShowedAtom, visibleGameNamesAtom} from "./state.ts";
 import {useAtomValue} from "jotai";
+import {useScreenSize} from "./useScreenSize.ts";
 
 ChartJS.register(
     CategoryScale,
@@ -31,6 +32,7 @@ const lineColors = [
 
 export const GameChart: React.FC = () => {
     const {dataset, loading, error} = useGameData();
+    const {isSmAndDown} = useScreenSize();
 
     const gameNames = useAtomValue(visibleGameNamesAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
@@ -47,7 +49,7 @@ export const GameChart: React.FC = () => {
                 min: 1,
                 max: topRanksShowed,
                 title: {
-                    display: true,
+                    display: !isSmAndDown,
                     text: 'Rank'
                 },
                 reverse: true,
@@ -181,7 +183,7 @@ export const GameChart: React.FC = () => {
     }
 
     // Simple height calculation
-    const chartHeight = topRanksShowed * 20 + 100;
+    const chartHeight = topRanksShowed * (isSmAndDown ? 15 : 20) + 100;
 
     return (
         <div style={{height: `${chartHeight}px`}}>
