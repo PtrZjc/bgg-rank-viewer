@@ -11,7 +11,7 @@ import {
 } from 'chart.js';
 import {ChartProps, Line} from 'react-chartjs-2';
 import {useGameData} from './useGameData';
-import {topRanksShowedAtom, visibleGameNamesAtom} from "./atoms.ts";
+import {topRanksShowedAtom, visibleGameNamesAtom} from "./state.ts";
 import {useAtomValue} from "jotai";
 
 ChartJS.register(

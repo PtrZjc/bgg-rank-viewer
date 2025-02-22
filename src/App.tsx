@@ -3,6 +3,7 @@ import {Provider} from 'jotai';
 import {DateRangeControls} from './DateRangeControls';
 import {GameChart} from './GameChart';
 import {DebugToggle} from "./DebugToggle.tsx";
+import {DateRangeSlider} from "./DateRangeSlider.tsx";
 
 export const App: React.FC = () => {
     return (
@@ -23,7 +24,6 @@ export const App: React.FC = () => {
                         <GameChart/>
                     </div>
                 </div>
-
                 <DebugToggle/> {/* Fixed position configured within a component */}
             </div>
         </Provider>

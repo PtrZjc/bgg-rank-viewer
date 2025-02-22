@@ -8,17 +8,16 @@ import {
     GameDayRanks,
     GameRow,
     loadingAtom,
-    maxDateAtom,
     MILLIS_IN_DAY,
-    minDateAtom,
     topRanksShowedAtom,
+    useDateStore,
     visibleGameNamesAtom
-} from './atoms';
+} from './state.ts';
 import Papa from "papaparse";
 
 export function useGameData() {
-    const minDate = useAtomValue(minDateAtom);
-    const maxDate = useAtomValue(maxDateAtom);
+    const minDate = useDateStore(state => state.minDate);
+    const maxDate = useDateStore(state => state.maxDate);
     const datapointNumberVisible = useAtomValue(datapointNumberVisibleAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
