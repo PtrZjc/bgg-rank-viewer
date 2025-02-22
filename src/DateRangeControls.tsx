@@ -1,13 +1,13 @@
 import React from 'react';
 import {useAtom} from 'jotai';
-import {maxDateAtom, minDateAtom, tickDaysResolutionAtom, topRanksShowedAtom} from './atoms';
+import {maxDateAtom, minDateAtom, datapointNumberVisibleAtom, topRanksShowedAtom} from './atoms';
 
 const absoluteMinDate = new Date('2024-04-01');
 
 export const DateRangeControls: React.FC = () => {
     const [minDate, setMinDate] = useAtom(minDateAtom);
     const [maxDate, setMaxDate] = useAtom(maxDateAtom);
-    const [tickDaysResolution, setTickDaysResolution] = useAtom(tickDaysResolutionAtom);
+    const [datapointNumberVisible, setDatapointNumberVisible] = useAtom(datapointNumberVisibleAtom);
     const [topRanksShowed, setTopRanksShowed] = useAtom(topRanksShowedAtom);
 
     const outerContainerStyle = "rounded-lg shadow"
@@ -39,13 +39,13 @@ export const DateRangeControls: React.FC = () => {
                 />
             </div>
             <div className={outerContainerStyle}>
-                <label className={labelStyle}>Date resolution:</label>
+                <label className={labelStyle}>Datapoints visible:</label>
                 <input
                     type="number"
-                    value={tickDaysResolution}
+                    value={datapointNumberVisible}
                     min="1"
                     max="100"
-                    onChange={(e) => setTickDaysResolution(Number(e.target.value))}
+                    onChange={(e) => setDatapointNumberVisible(Number(e.target.value))}
                     className={inputStyle}
                 />
             </div>

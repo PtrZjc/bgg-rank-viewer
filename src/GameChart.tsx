@@ -30,6 +30,7 @@ const lineColors = [
 
 export const GameChart: React.FC = () => {
     const {dataset, loading, error} = useGameData();
+
     const gameNames = useAtomValue(visibleGameNamesAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
@@ -52,7 +53,7 @@ export const GameChart: React.FC = () => {
             },
             x: {
                 ticks: {
-                    autoSkip: false,
+                    autoSkip: true,
                     maxRotation: 90, // Rotate labels for better fit
                     minRotation: 90  // Keep consistent rotation
                 }
@@ -66,6 +67,9 @@ export const GameChart: React.FC = () => {
                 enabled: true,
                 mode: 'dataset',
                 intersect: true,
+                position: 'nearest',
+                yAlign: 'bottom',
+                caretPadding: 10,
                 callbacks: {
                     // Show only title (game name)
                     title: (contexts: TooltipItem<'line'>[]) => {
@@ -93,11 +97,11 @@ export const GameChart: React.FC = () => {
         },
         hover: {
             mode: 'dataset',
-            intersect: true
+            intersect: false
         },
         layout: {
             padding: {
-                right: 100 // Fixed padding for labels
+                // right: 100 // Fixed padding for labels
             }
         }
     };
@@ -161,7 +165,7 @@ export const GameChart: React.FC = () => {
         }));
 
         return {labels, datasets};
-    }, [dataset]);
+    }, [dataset, gameNames]);
 
     if (loading) {
         return <div className="flex items-center justify-center h-96">Loading data...</div>;

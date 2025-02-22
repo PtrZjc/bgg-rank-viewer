@@ -2,14 +2,15 @@
 import {useAtom, useAtomValue} from 'jotai';
 import {useEffect} from 'react';
 import {
+    datapointNumberVisibleAtom,
     datasetAtom,
     errorAtom,
     GameDayRanks,
     GameRow,
     loadingAtom,
     maxDateAtom,
+    MILLIS_IN_DAY,
     minDateAtom,
-    tickDaysResolutionAtom,
     topRanksShowedAtom,
     visibleGameNamesAtom
 } from './atoms';
@@ -18,7 +19,7 @@ import Papa from "papaparse";
 export function useGameData() {
     const minDate = useAtomValue(minDateAtom);
     const maxDate = useAtomValue(maxDateAtom);
-    const tickDaysResolution = useAtomValue(tickDaysResolutionAtom);
+    const datapointNumberVisible = useAtomValue(datapointNumberVisibleAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
     const [dataset, setDataset] = useAtom(datasetAtom);
@@ -32,12 +33,10 @@ export function useGameData() {
             setError(null);
 
             try {
-                const dateRange = getDatesInRange(minDate, maxDate, tickDaysResolution);
+                const dateRange = getDatesInRange(minDate, maxDate, datapointNumberVisible);
                 const data = await fetchGameData(dateRange);
 
-                setVisibleGameNames(extractVisibleGameNames(data, topRanksShowed))
                 setDataset(data);
-            console.log("Loaded data with size ", data.length);
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -48,23 +47,33 @@ export function useGameData() {
         };
 
         loadData();
-    }, [minDate, maxDate, tickDaysResolution, topRanksShowed, setVisibleGameNames, setDataset, setLoading, setError]);
+    }, [minDate, maxDate, setDataset, setLoading, setError, datapointNumberVisible]);
 
-    return {dataset, loading, error};
+    useEffect(() => {
+        const gameNames = Array.from(new Set(
+            dataset.flatMap(dayRanks => Object.keys(dayRanks)
+                .filter(key => Number(dayRanks[key]) < topRanksShowed))
+        ));
+        setVisibleGameNames(gameNames)
+    }, [dataset, topRanksShowed, setVisibleGameNames]);
+
+    return {dataset, loading, error, topRanksShowed};
 }
 
-function getDatesInRange(startDate: Date, endDate: Date, resolution: number): string[] {
+function getDatesInRange(startDate: Date, endDate: Date, datapointNumberVisible: number): string[] {
     const dates: Date[] = [];
-    const dayDifference = Math.round(Math.abs(+endDate - +startDate) / (24 * 60 * 60 * 1000)) + 1;
-    const leftoverDays = dayDifference % resolution;
 
-    const currentDate = new Date(startDate);
-    currentDate.setDate(currentDate.getDate() - leftoverDays);
+    const datapointResolution =
+        (endDate.getTime() - startDate.getTime()) / MILLIS_IN_DAY / (datapointNumberVisible - 1) // -1 to include the last day
 
-    while (currentDate <= endDate) {
+    const currentDate = new Date(endDate);
+
+    while (currentDate >= startDate) {
         dates.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + resolution);
+        currentDate.setDate(currentDate.getDate() - datapointResolution);
     }
+
+    dates.reverse() // starting from oldest
 
     return dates.map(date => date.toISOString().split('T')[0]);
 }
@@ -104,9 +113,3 @@ async function fetchGameData(
     return processedData.filter((gameDayRanks) => Object.keys(gameDayRanks).length > 2);
 }
 
-function extractVisibleGameNames(data: GameDayRanks[], topRanksShowed: number): string[] {
-    return Array.from(new Set(
-        data.flatMap(dayRanks => Object.keys(dayRanks)
-            .filter(key => Number(dayRanks[key]) < topRanksShowed))
-    ));
-}
