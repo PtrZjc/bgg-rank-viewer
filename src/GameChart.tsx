@@ -2,6 +2,7 @@ import React, {useMemo} from 'react';
 import {
     CategoryScale,
     Chart as ChartJS,
+    ChartOptions,
     LinearScale,
     LineElement,
     PointElement,
@@ -9,7 +10,7 @@ import {
     Tooltip,
     TooltipItem
 } from 'chart.js';
-import {ChartProps, Line} from 'react-chartjs-2';
+import {Line} from 'react-chartjs-2';
 import {useGameData} from './useGameData';
 import {topRanksShowedAtom, visibleGameNamesAtom} from "./state.ts";
 import {useAtomValue} from "jotai";
@@ -34,7 +35,7 @@ export const GameChart: React.FC = () => {
     const gameNames = useAtomValue(visibleGameNamesAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
-    const options: ChartProps = {
+    const options: ChartOptions<'line'> = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
@@ -180,7 +181,7 @@ export const GameChart: React.FC = () => {
     }
 
     // Simple height calculation
-    const chartHeight = topRanksShowed * 25 + 100;
+    const chartHeight = topRanksShowed * 20 + 100;
 
     return (
         <div style={{height: `${chartHeight}px`}}>

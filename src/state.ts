@@ -24,7 +24,7 @@ export const errorAtom = atom<string | null>(null);
 export const datasetAtom = atom<GameDayRanks[]>([]);
 export const visibleGameNamesAtom = atom<string[]>([]);
 export const datapointNumberVisibleAtom = atom<number>(50);
-export const topRanksShowedAtom = atom<number>(30);
+export const topRanksShowedAtom = atom<number>(100);
 
 // stores
 export const useDateStore = create<{
