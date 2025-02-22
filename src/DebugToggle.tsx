@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 
 export const DebugToggle: React.FC = () => {
-    const [isDebug, setIsDebug] = useState(false);
+    const [isDebug, setIsDebug] = useState(true);
 
     useEffect(() => {
         if (isDebug) {

@@ -37,11 +37,14 @@ export function useGameData() {
 
                 setVisibleGameNames(extractVisibleGameNames(data, topRanksShowed))
                 setDataset(data);
+            console.log("Loaded data with size ", data.length);
+
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Unknown error occurred');
             } finally {
                 setLoading(false);
             }
+
         };
 
         loadData();

@@ -1,23 +1,30 @@
 import React from 'react';
-import { Provider } from 'jotai';
-import { DateRangeControls } from './DateRangeControls';
-import { GameChart } from './GameChart';
+import {Provider} from 'jotai';
+import {DateRangeControls} from './DateRangeControls';
+import {GameChart} from './GameChart';
 import {DebugToggle} from "./DebugToggle.tsx";
 
 export const App: React.FC = () => {
     return (
         <Provider>
-            <div className="p-4 max-w-7xl mx-auto">
-                <h1 className="text-2xl font-bold mb-6">Game Rankings Over Time</h1>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="md:col-span-1">
-                        <DateRangeControls />
-                        <DebugToggle />
+            <div className="max-w-7xl p-4 mx-auto">
+                <div className="space-y-6">
+                    <header>
+                        <h2 className="text-3xl text-center font-bold">BGG Game Rankings Over Time</h2>
+                    </header>
+
+                    <div className="w-11/12 mx-auto">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                            <DateRangeControls/>
+                        </div>
                     </div>
-                    <div className="md:col-span-3">
-                        <GameChart />
+
+                    <div className="rounded-lg p-4 shadow">
+                        <GameChart/>
                     </div>
                 </div>
+
+                <DebugToggle/> {/* Fixed position configured within a component */}
             </div>
         </Provider>
     );

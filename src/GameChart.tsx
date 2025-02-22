@@ -9,7 +9,7 @@ import {
     Tooltip,
     TooltipItem
 } from 'chart.js';
-import {Line} from 'react-chartjs-2';
+import {ChartProps, Line} from 'react-chartjs-2';
 import {useGameData} from './useGameData';
 import {topRanksShowedAtom, visibleGameNamesAtom} from "./atoms.ts";
 import {useAtomValue} from "jotai";
@@ -33,11 +33,16 @@ export const GameChart: React.FC = () => {
     const gameNames = useAtomValue(visibleGameNamesAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
-    const options = {
+    const options: ChartProps = {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
             y: {
+                ticks: {
+                    stepSize: 1,
+                    autoSkip: false
+                },
+                min: 1,
                 max: topRanksShowed,
                 title: {
                     display: true,
@@ -46,9 +51,10 @@ export const GameChart: React.FC = () => {
                 reverse: true,
             },
             x: {
-                title: {
-                    display: true,
-                    text: 'Date'
+                ticks: {
+                    autoSkip: false,
+                    maxRotation: 90, // Rotate labels for better fit
+                    minRotation: 90  // Keep consistent rotation
                 }
             }
         },
@@ -169,10 +175,12 @@ export const GameChart: React.FC = () => {
         return <div className="text-gray-500">No data available</div>;
     }
 
+    // Simple height calculation
+    const chartHeight = topRanksShowed * 25 + 100;
+
     return (
-        <div className="w-full h-[500px]">
+        <div style={{height: `${chartHeight}px`}}>
             <Line
-                // @ts-expect-error
                 options={options}
                 data={{labels, datasets}}
                 // plugins={[endLineLabelsPlugin]}
