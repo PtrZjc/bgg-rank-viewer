@@ -32,11 +32,11 @@ const lineColors = [
 
 export const GameChart: React.FC = () => {
     const {dataset, loading, error} = useGameData();
-    const {isSmAndDown} = useScreenSize();
+    const {isSmAndDown, isXl} = useScreenSize();
 
     const gameNames = useAtomValue(visibleGameNamesAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
-
+    console.log(isXl)
     const options: ChartOptions<'line'> = {
         responsive: true,
         maintainAspectRatio: false,
@@ -77,21 +77,20 @@ export const GameChart: React.FC = () => {
                     // Show only title (game name)
                     title: (contexts: TooltipItem<'line'>[]) => {
                         if (contexts.length > 0) {
+                            console.log(contexts[0]);
                             return contexts[0].dataset.label;
                         }
                         return '';
                     },
-                    // Return empty string to hide the label
                     label: () => ''
                 },
-                // Customize tooltip style
                 backgroundColor: 'rgba(0, 0, 0, 0.8)',
                 titleFont: {
                     size: 14,
                     weight: 'bold'
                 },
                 padding: 10,
-                displayColors: false // Hide color box
+                displayColors: false
             }
         },
         interaction: {
@@ -104,46 +103,43 @@ export const GameChart: React.FC = () => {
         },
         layout: {
             padding: {
-                // right: 100 // Fixed padding for labels
+                right: isXl ? 200 : 0
             }
         }
     };
 
 
     // Create plugin instance once
-    // @ts-expect-error
     const endLineLabelsPlugin = useMemo(() => {
         return {
             id: 'endLineLabels' as const,
             afterDatasetsDraw(chart: any) {
+                if (!isXl) return
+
                 const {ctx, scales: {x, y}} = chart;
+                const maxY = chart.scales.y.options.max;
 
                 chart.data.datasets.forEach((dataset: any) => {
                     const lastDataPoint = dataset.data[dataset.data.length - 1];
-                    if (lastDataPoint === undefined) return;
+                    if (lastDataPoint === undefined || lastDataPoint > maxY) return;
 
                     const xScale = x.getPixelForTick(dataset.data.length - 1);
                     const yScale = y.getPixelForValue(lastDataPoint);
 
                     ctx.save();
-                    ctx.strokeStyle = dataset.borderColor;
-                    ctx.beginPath();
-                    ctx.moveTo(xScale, yScale);
-                    ctx.lineTo(xScale + 10, yScale);
-                    ctx.stroke();
                     ctx.fillStyle = dataset.borderColor;
                     ctx.font = '12px Arial';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(
                         dataset.label || '',
-                        xScale + 15,
+                        xScale + 5,
                         yScale
                     );
                     ctx.restore();
                 });
             }
         };
-    }, []);
+    }, [isXl]);
 
     const {labels, datasets} = useMemo(() => {
         if (dataset.length === 0) return {labels: [], datasets: []};
@@ -190,7 +186,8 @@ export const GameChart: React.FC = () => {
             <Line
                 options={options}
                 data={{labels, datasets}}
-                // plugins={[endLineLabelsPlugin]}
+                // plugins={isXl ? [endLineLabelsPlugin] : []}
+                plugins={[endLineLabelsPlugin]}
             />
         </div>
     );

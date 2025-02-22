@@ -3,7 +3,6 @@ import {Provider} from 'jotai';
 import {DateRangeControls} from './DateRangeControls';
 import {GameChart} from './GameChart';
 import {DebugToggle} from "./DebugToggle.tsx";
-import {useScreenSize} from "./useScreenSize.ts";
 
 export const App: React.FC = () => {
 
