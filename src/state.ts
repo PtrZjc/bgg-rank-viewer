@@ -2,16 +2,31 @@ import {atom} from 'jotai';
 import {create} from 'zustand'
 
 // global types
-export type GameRow = {
+export type GameData = {
     rank: number;
     name: string;
     link: string;
+}
+
+export type DailyGameData = {
+    day: string;
+    data: GameData[];
+}
+
+export type GameDisplayData = {
+    [gameName: string]: { 
+        newestRank: number, 
+        link: string,
+        // rankDifference: number
+        // color: string
+    };
 }
 
 export type GameDayRanks = {
     day: string;
     [gameName: string]: number | string;
 }
+
 
 // global constants
 export const ZERO_DATE = new Date('2024-04-01');
@@ -22,6 +37,7 @@ export const DAYS_FROM_ZERO_DATE_TO_TODAY = Math.floor((new Date().getTime() - Z
 export const loadingAtom = atom<boolean>(false);
 export const errorAtom = atom<string | null>(null);
 export const datasetAtom = atom<GameDayRanks[]>([]);
+export const gameDisplayDataDataAtom = atom<GameDisplayData>({});
 export const visibleGameNamesAtom = atom<string[]>([]);
 export const datapointNumberVisibleAtom = atom<number>(50);
 export const topRanksShowedAtom = atom<number>(100);

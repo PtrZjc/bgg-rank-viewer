@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import {Line} from 'react-chartjs-2';
 import {useGameData} from './useGameData';
-import {topRanksShowedAtom, visibleGameNamesAtom} from "./state.ts";
+import {gameDisplayDataDataAtom, topRanksShowedAtom, visibleGameNamesAtom} from "./state.ts";
 import {useAtomValue} from "jotai";
 import {useScreenSize} from "./useScreenSize.ts";
 
@@ -36,7 +36,8 @@ export const GameChart: React.FC = () => {
 
     const gameNames = useAtomValue(visibleGameNamesAtom);
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
-    console.log(isXl)
+    const gameDisplayDataData = useAtomValue(gameDisplayDataDataAtom);
+
     const options: ChartOptions<'line'> = {
         responsive: true,
         maintainAspectRatio: false,
@@ -77,7 +78,7 @@ export const GameChart: React.FC = () => {
                     // Show only title (game name)
                     title: (contexts: TooltipItem<'line'>[]) => {
                         if (contexts.length > 0) {
-                            console.log(contexts[0]);
+                            // console.log(contexts[0]);
                             return contexts[0].dataset.label;
                         }
                         return '';
@@ -108,38 +109,38 @@ export const GameChart: React.FC = () => {
         }
     };
 
-
     // Create plugin instance once
-    const endLineLabelsPlugin = useMemo(() => {
-        return {
-            id: 'endLineLabels' as const,
-            afterDatasetsDraw(chart: any) {
-                if (!isXl) return
+    const endLineLabelsPlugin = {
 
-                const {ctx, scales: {x, y}} = chart;
-                const maxY = chart.scales.y.options.max;
+        id: 'endLineLabels' as const,
+        afterDatasetsDraw(chart: any) {
+            if (!isXl) return
 
-                chart.data.datasets.forEach((dataset: any) => {
-                    const lastDataPoint = dataset.data[dataset.data.length - 1];
-                    if (lastDataPoint === undefined || lastDataPoint > maxY) return;
+            const {ctx, scales: {x, y}} = chart;
+            const maxY = chart.scales.y.options.max;
 
-                    const xScale = x.getPixelForTick(dataset.data.length - 1);
-                    const yScale = y.getPixelForValue(lastDataPoint);
+            chart.data.datasets.forEach((dataset: any) => {
+                const lastDataPoint = dataset.data[dataset.data.length - 1];
+                if (lastDataPoint === undefined || lastDataPoint > maxY) return;
 
-                    ctx.save();
-                    ctx.fillStyle = dataset.borderColor;
-                    ctx.font = '12px Arial';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(
-                        dataset.label || '',
-                        xScale + 5,
-                        yScale
-                    );
-                    ctx.restore();
-                });
-            }
-        };
-    }, [isXl]);
+                const xScale = x.getPixelForTick(dataset.data.length - 1);
+                const yScale = y.getPixelForValue(lastDataPoint);
+
+                const rank = gameDisplayDataData[dataset.label].newestRank;
+                const text = `${rank}. ${dataset.label}`;
+                ctx.save();
+                ctx.fillStyle = dataset.borderColor;
+                ctx.font = '12px Arial';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(
+                    text || '',
+                    xScale + 5,
+                    yScale
+                );
+                ctx.restore();
+            });
+        }
+    }
 
     const {labels, datasets} = useMemo(() => {
         if (dataset.length === 0) return {labels: [], datasets: []};

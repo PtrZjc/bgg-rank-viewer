@@ -2,11 +2,14 @@
 import {useAtom, useAtomValue} from 'jotai';
 import {useEffect} from 'react';
 import {
+    DailyGameData,
     datapointNumberVisibleAtom,
     datasetAtom,
     errorAtom,
+    GameData,
     GameDayRanks,
-    GameRow,
+    GameDisplayData,
+    gameDisplayDataDataAtom,
     loadingAtom,
     MILLIS_IN_DAY,
     topRanksShowedAtom,
@@ -22,6 +25,7 @@ export function useGameData() {
     const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
     const [dataset, setDataset] = useAtom(datasetAtom);
+    const [_gameDisplayDataData, setGameDisplayDataData] = useAtom(gameDisplayDataDataAtom);
     const [_visibleGameNames, setVisibleGameNames] = useAtom(visibleGameNamesAtom);
     const [loading, setLoading] = useAtom(loadingAtom);
     const [error, setError] = useAtom(errorAtom);
@@ -33,9 +37,16 @@ export function useGameData() {
 
             try {
                 const dateRange = getDatesInRange(minDate, maxDate, datapointNumberVisible);
-                const data = await fetchGameData(dateRange);
+                const dailyGameData = await fetchGameData(dateRange);
+                const dataset = mapToDataset(dailyGameData);
 
-                setDataset(data);
+                const lastDayData = dailyGameData[dailyGameData.length - 1].data.reduce((acc, {name, rank, link}) => ({
+                    ...acc, [name]: {newestRank: rank, link}
+                }), {} as GameDisplayData);
+
+                console.log('Last day data:', lastDayData);
+                setGameDisplayDataData(lastDayData);
+                setDataset(dataset);
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -79,7 +90,7 @@ function getDatesInRange(startDate: Date, endDate: Date, datapointNumberVisible:
 
 async function fetchGameData(
     dateRange: string[],
-): Promise<GameDayRanks[]> {
+): Promise<DailyGameData[]> {
     if (!dateRange.length) return [];
 
     const fetchPromises = dateRange.map(async (date) => {
@@ -89,26 +100,26 @@ async function fetchGameData(
 
     const results = await Promise.all(fetchPromises);
 
-    const allGameDayRanks = results.map(({date, text}) => {
-        return new Promise<GameDayRanks>((resolve, reject) => {
+    const parseTextToGameData = results.map(({date, text}) => {
+        return new Promise<GameData[]>((resolve, reject) => {
             Papa.parse(text, {
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
-                complete: (results) => {
-                    const data = results.data as GameRow[];
-                    const mappedData = data.reduce((acc, {name, rank}) => ({
-                        ...acc,
-                        [name]: rank
-                    }), {day: date} as GameDayRanks);
-                    resolve(mappedData);
-                },
+                complete: (results) => resolve(results.data as GameData[]),
                 error: (error: Error) => reject(new Error(`Failed to parse CSV for ${date}: ${error.message}`))
             });
         });
     });
-
-    const processedData = await Promise.all(allGameDayRanks);
-    return processedData.filter((gameDayRanks) => Object.keys(gameDayRanks).length > 2);
+    const processedData = await Promise.all(parseTextToGameData);
+    return processedData.map((data, index) => ({day: dateRange[index], data}));
 }
 
+function mapToDataset(dailyGameData: DailyGameData[]) {
+    return dailyGameData.map(({day, data}) => {
+        return data.reduce((acc, {name, rank}) => ({
+            ...acc,
+            [name]: rank
+        }), {day} as GameDayRanks);
+    }).filter(dayRanks => Object.keys(dayRanks).length > 2);
+}
