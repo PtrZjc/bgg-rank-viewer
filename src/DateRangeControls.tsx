@@ -1,18 +1,22 @@
 import {useAtom} from 'jotai';
 import {useDebouncedCallback} from 'use-debounce';
-import {datapointNumberVisibleAtom, DAYS_FROM_ZERO_DATE_TO_TODAY, topRanksShowedAtom, useDateStore} from './state.ts';
+import {datapointNumberVisibleAtom, DAYS_FROM_ZERO_DATE_TO_TODAY, useDateStore} from './state.ts';
 import {DateRangeSlider} from "./DateRangeSlider.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import {useGameDataStore} from "./useGameDataStore.ts";
 
 export const DateRangeControls: React.FC = () => {
     const [datapointNumberVisible, setDatapointNumberVisible] = useAtom(datapointNumberVisibleAtom);
-    const [topRanksShowed, setTopRanksShowed] = useAtom(topRanksShowedAtom);
 
+    const [topRanksShowed, setTopRanksShowed] = useState(100);
     const [inFormDatapointNumber, setInFormDatapointNumber] = useState(datapointNumberVisible);
     const [inFormTopRanksShowed, setInFormTopRanksShowed] = useState(topRanksShowed);
 
     const minDateDisplayed = useDateStore(state => state.minDateDisplayed);
     const maxDateDisplayed = useDateStore(state => state.maxDateDisplayed);
+
+    const calculateVisibleGamesData = useGameDataStore(state => state.calculateVisibleGamesData);
+    const dailyGameData = useGameDataStore(state => state.dailyGameData);
 
     const debouncedSetDatapoints = useDebouncedCallback(
         (value: number) => setDatapointNumberVisible(value), 300
@@ -25,6 +29,12 @@ export const DateRangeControls: React.FC = () => {
     const outerContainerStyle = "rounded-lg shadow"
     const inputStyle = "w-full border p-2 rounded text-center"
     const labelStyle = "block font-medium"
+
+    useEffect(() => {
+        if (dailyGameData.length > 0) {
+            calculateVisibleGamesData(topRanksShowed)
+        }
+    }, [topRanksShowed, dailyGameData]);
 
     return (
         <>

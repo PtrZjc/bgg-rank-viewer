@@ -20,7 +20,7 @@ export const App: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="rounded-lg p-0 lg:p-4 shadow">
+                    <div className="rounded-lg p-0 shadow">
                         <GameChart/>
                     </div>
                 </div>

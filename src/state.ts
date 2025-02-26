@@ -1,5 +1,6 @@
 import {atom} from 'jotai';
 import {create} from 'zustand'
+import {devtools} from 'zustand/middleware'
 
 // global types
 export type GameData = {
@@ -13,13 +14,9 @@ export type DailyGameData = {
     data: GameData[];
 }
 
-export type GameDisplayData = {
-    [gameName: string]: { 
-        newestRank: number, 
-        link: string,
-        // rankDifference: number
-        // color: string
-    };
+export type SupplementedGameData = GameData & { // TBD
+    // rankDifference: number
+    // color: string
 }
 
 export type GameDayRanks = {
@@ -34,13 +31,9 @@ export const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
 export const DAYS_FROM_ZERO_DATE_TO_TODAY = Math.floor((new Date().getTime() - ZERO_DATE.getTime()) / MILLIS_IN_DAY)
 
 // atoms
-export const loadingAtom = atom<boolean>(false);
+export const loadingAtom = atom<boolean>(false); // is it needed?
 export const errorAtom = atom<string | null>(null);
-export const datasetAtom = atom<GameDayRanks[]>([]);
-export const gameDisplayDataDataAtom = atom<GameDisplayData>({});
-export const visibleGameNamesAtom = atom<string[]>([]);
 export const datapointNumberVisibleAtom = atom<number>(50);
-export const topRanksShowedAtom = atom<number>(100);
 
 // stores
 export const useDateStore = create<{

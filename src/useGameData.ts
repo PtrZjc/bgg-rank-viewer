@@ -4,29 +4,22 @@ import {useEffect} from 'react';
 import {
     DailyGameData,
     datapointNumberVisibleAtom,
-    datasetAtom,
     errorAtom,
     GameData,
-    GameDayRanks,
-    GameDisplayData,
-    gameDisplayDataDataAtom,
     loadingAtom,
     MILLIS_IN_DAY,
-    topRanksShowedAtom,
     useDateStore,
-    visibleGameNamesAtom
 } from './state.ts';
 import Papa from "papaparse";
+import {useGameDataStore} from "./useGameDataStore.ts";
 
 export function useGameData() {
     const minDate = useDateStore(state => state.minDate);
     const maxDate = useDateStore(state => state.maxDate);
     const datapointNumberVisible = useAtomValue(datapointNumberVisibleAtom);
-    const topRanksShowed = useAtomValue(topRanksShowedAtom);
 
-    const [dataset, setDataset] = useAtom(datasetAtom);
-    const [_gameDisplayDataData, setGameDisplayDataData] = useAtom(gameDisplayDataDataAtom);
-    const [_visibleGameNames, setVisibleGameNames] = useAtom(visibleGameNamesAtom);
+    const setDailyGameDataAndDataset = useGameDataStore(state => state.setDailyGameDataAndDataset);
+
     const [loading, setLoading] = useAtom(loadingAtom);
     const [error, setError] = useAtom(errorAtom);
 
@@ -38,15 +31,10 @@ export function useGameData() {
             try {
                 const dateRange = getDatesInRange(minDate, maxDate, datapointNumberVisible);
                 const dailyGameData = await fetchGameData(dateRange);
-                const dataset = mapToDataset(dailyGameData);
 
-                const lastDayData = dailyGameData[dailyGameData.length - 1].data.reduce((acc, {name, rank, link}) => ({
-                    ...acc, [name]: {newestRank: rank, link}
-                }), {} as GameDisplayData);
+                console.log("setting dailyGameData and dataset")
 
-                console.log('Last day data:', lastDayData);
-                setGameDisplayDataData(lastDayData);
-                setDataset(dataset);
+                setDailyGameDataAndDataset(dailyGameData)
 
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -57,17 +45,9 @@ export function useGameData() {
         };
 
         loadData();
-    }, [minDate, maxDate, setDataset, setLoading, setError, datapointNumberVisible]);
+    }, [minDate, maxDate, setLoading, setError, datapointNumberVisible]);
 
-    useEffect(() => {
-        const gameNames = Array.from(new Set(
-            dataset.flatMap(dayRanks => Object.keys(dayRanks)
-                .filter(key => Number(dayRanks[key]) < topRanksShowed))
-        ));
-        setVisibleGameNames(gameNames)
-    }, [dataset, topRanksShowed, setVisibleGameNames]);
-
-    return {dataset, loading, error, topRanksShowed};
+    return {loading, error};
 }
 
 function getDatesInRange(startDate: Date, endDate: Date, datapointNumberVisible: number): string[] {
@@ -113,13 +93,4 @@ async function fetchGameData(
     });
     const processedData = await Promise.all(parseTextToGameData);
     return processedData.map((data, index) => ({day: dateRange[index], data}));
-}
-
-function mapToDataset(dailyGameData: DailyGameData[]) {
-    return dailyGameData.map(({day, data}) => {
-        return data.reduce((acc, {name, rank}) => ({
-            ...acc,
-            [name]: rank
-        }), {day} as GameDayRanks);
-    }).filter(dayRanks => Object.keys(dayRanks).length > 2);
 }

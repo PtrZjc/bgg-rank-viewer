@@ -7,10 +7,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ],
-  "compilerOptions": {
-    "noImplicitAny": false,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
-  }
+  ]
 }

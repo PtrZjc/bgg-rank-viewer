@@ -12,9 +12,7 @@ import {
 } from 'chart.js';
 import {Line} from 'react-chartjs-2';
 import {useGameData} from './useGameData';
-import {gameDisplayDataDataAtom, topRanksShowedAtom, visibleGameNamesAtom} from "./state.ts";
-import {useAtomValue} from "jotai";
-import {useScreenSize} from "./useScreenSize.ts";
+import {useGameDataStore} from "./useGameDataStore.ts";
 
 ChartJS.register(
     CategoryScale,
@@ -31,12 +29,12 @@ const lineColors = [
 ];
 
 export const GameChart: React.FC = () => {
-    const {dataset, loading, error} = useGameData();
-    const {isSmAndDown, isXl} = useScreenSize();
 
-    const gameNames = useAtomValue(visibleGameNamesAtom);
-    const topRanksShowed = useAtomValue(topRanksShowedAtom);
-    const gameDisplayDataData = useAtomValue(gameDisplayDataDataAtom);
+    const {loading, error} = useGameData();
+
+    const dataset = useGameDataStore(state => state.dataset);
+    const allGameNames = useGameDataStore(state => state.allGameNames);
+    const visibleGamesData = useGameDataStore(state => state.visibleGamesData);
 
     const options: ChartOptions<'line'> = {
         responsive: true,
@@ -44,22 +42,24 @@ export const GameChart: React.FC = () => {
         scales: {
             y: {
                 ticks: {
+                    display: false,
                     stepSize: 1,
                     autoSkip: false
                 },
                 min: 1,
-                max: topRanksShowed,
+                max: visibleGamesData.length,
                 title: {
-                    display: !isSmAndDown,
+                    display: false,
                     text: 'Rank'
                 },
                 reverse: true,
             },
             x: {
                 ticks: {
+                    display: false,
                     autoSkip: true,
-                    maxRotation: 90, // Rotate labels for better fit
-                    minRotation: 90  // Keep consistent rotation
+                    maxRotation: 90,
+                    minRotation: 90
                 }
             }
         },
@@ -75,10 +75,8 @@ export const GameChart: React.FC = () => {
                 yAlign: 'bottom',
                 caretPadding: 10,
                 callbacks: {
-                    // Show only title (game name)
                     title: (contexts: TooltipItem<'line'>[]) => {
                         if (contexts.length > 0) {
-                            // console.log(contexts[0]);
                             return contexts[0].dataset.label;
                         }
                         return '';
@@ -104,50 +102,18 @@ export const GameChart: React.FC = () => {
         },
         layout: {
             padding: {
-                right: isXl ? 200 : 0
+                top: 10,
+                // right: isXl ? 200 : 0
             }
         }
     };
-
-    // Create plugin instance once
-    const endLineLabelsPlugin = {
-
-        id: 'endLineLabels' as const,
-        afterDatasetsDraw(chart: any) {
-            if (!isXl) return
-
-            const {ctx, scales: {x, y}} = chart;
-            const maxY = chart.scales.y.options.max;
-
-            chart.data.datasets.forEach((dataset: any) => {
-                const lastDataPoint = dataset.data[dataset.data.length - 1];
-                if (lastDataPoint === undefined || lastDataPoint > maxY) return;
-
-                const xScale = x.getPixelForTick(dataset.data.length - 1);
-                const yScale = y.getPixelForValue(lastDataPoint);
-
-                const rank = gameDisplayDataData[dataset.label].newestRank;
-                const text = `${rank}. ${dataset.label}`;
-                ctx.save();
-                ctx.fillStyle = dataset.borderColor;
-                ctx.font = '12px Arial';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(
-                    text || '',
-                    xScale + 5,
-                    yScale
-                );
-                ctx.restore();
-            });
-        }
-    }
 
     const {labels, datasets} = useMemo(() => {
         if (dataset.length === 0) return {labels: [], datasets: []};
 
         const labels = dataset.map(entry => new Date(entry.day).toLocaleDateString());
 
-        const datasets = gameNames.map((gameName, index) => ({
+        const datasets = allGameNames.map((gameName, index) => ({
             label: gameName,
             data: dataset.map(entry => entry[gameName] as number | undefined),
             borderColor: lineColors[index % lineColors.length],
@@ -165,7 +131,7 @@ export const GameChart: React.FC = () => {
         }));
 
         return {labels, datasets};
-    }, [dataset, gameNames]);
+    }, [dataset, visibleGamesData]);
 
     if (loading) {
         return <div className="flex items-center justify-center h-96">Loading data...</div>;
@@ -179,17 +145,52 @@ export const GameChart: React.FC = () => {
         return <div className="text-gray-500">No data available</div>;
     }
 
-    // Simple height calculation
-    const chartHeight = topRanksShowed * (isSmAndDown ? 15 : 20) + 100;
+    const rowHeight = 20;
+    const chartHeight = visibleGamesData.length * rowHeight;
 
     return (
-        <div style={{height: `${chartHeight}px`}}>
-            <Line
-                options={options}
-                data={{labels, datasets}}
-                // plugins={isXl ? [endLineLabelsPlugin] : []}
-                plugins={[endLineLabelsPlugin]}
-            />
+        <div style={{height: `${chartHeight}px`}} className="w-full">
+            <div className="flex h-full">
+                {/* Left column - Ranks */}
+                <div className="h-full flex flex-col">
+                    {visibleGamesData.map(({rank}, index) => (
+                        <div
+                            key={index}
+                            className="flex items-center justify-items-end pr-1"
+                            style={{height: `${rowHeight}px`}}
+                        >
+                            <p style={{color: `${lineColors[index % lineColors.length]}`}}
+                               className="text-lg truncate w-full">
+                                {rank}.
+                            </p>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Middle column - Chart */}
+                <div className="flex-grow h-full">
+                    <Line
+                        options={options}
+                        data={{labels, datasets}}
+                    />
+                </div>
+
+                {/* Right column - Game names */}
+                <div className="h-full flex flex-col">
+                    {visibleGamesData.map(({name}, index) => (
+                        <div
+                            key={index}
+                            className="flex items-center pl-1"
+                            style={{height: `${rowHeight}px`}}
+                        >
+                            <p style={{color: `${lineColors[index % lineColors.length]}`}}
+                               className="text-lg truncate w-full">
+                                {name}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };
