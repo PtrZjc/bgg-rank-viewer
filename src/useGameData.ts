@@ -1,29 +1,29 @@
 // useGameData.ts
-import {useAtom, useAtomValue} from 'jotai';
-import {useEffect} from 'react';
+import { useEffect } from 'react';
 import {
     DailyGameData,
-    datapointNumberVisibleAtom,
-    errorAtom,
-    GameData,
-    loadingAtom,
     MILLIS_IN_DAY,
-    useDateStore,
+    useDateStore
 } from './state.ts';
 import Papa from "papaparse";
-import {useGameDataStore} from "./useGameDataStore.ts";
+import { useGameDataStore } from "./useGameDataStore.ts";
 
 export function useGameData() {
+    // Use individual selectors for better performance
     const minDate = useDateStore(state => state.minDate);
     const maxDate = useDateStore(state => state.maxDate);
-    const datapointNumberVisible = useAtomValue(datapointNumberVisibleAtom);
+    const datapointNumberVisible = useDateStore(state => state.datapointNumberVisible);
+    const loading = useDateStore(state => state.loading);
+    const error = useDateStore(state => state.error);
+    const setLoading = useDateStore(state => state.setLoading);
+    const setError = useDateStore(state => state.setError);
 
     const setDailyGameDataAndDataset = useGameDataStore(state => state.setDailyGameDataAndDataset);
-
-    const [loading, setLoading] = useAtom(loadingAtom);
-    const [error, setError] = useAtom(errorAtom);
+    const calculateVisibleGamesData = useGameDataStore(state => state.calculateVisibleGamesData);
 
     useEffect(() => {
+        let isMounted = true;
+
         const loadData = async () => {
             setLoading(true);
             setError(null);
@@ -32,29 +32,37 @@ export function useGameData() {
                 const dateRange = getDatesInRange(minDate, maxDate, datapointNumberVisible);
                 const dailyGameData = await fetchGameData(dateRange);
 
-                console.log("setting dailyGameData and dataset")
-
-                setDailyGameDataAndDataset(dailyGameData)
-
+                if (isMounted) {
+                    setDailyGameDataAndDataset(dailyGameData);
+                    // Calculate visible games with default value of 100
+                    calculateVisibleGamesData(100);
+                }
             } catch (err) {
-                setError(err instanceof Error ? err.message : 'Unknown error occurred');
+                if (isMounted) {
+                    setError(err instanceof Error ? err.message : 'Unknown error occurred');
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
-
         };
 
         loadData();
-    }, [minDate, maxDate, setLoading, setError, datapointNumberVisible]);
 
-    return {loading, error};
+        return () => {
+            isMounted = false;
+        };
+    }, [minDate, maxDate, datapointNumberVisible]);
+
+    return { loading, error };
 }
 
 function getDatesInRange(startDate: Date, endDate: Date, datapointNumberVisible: number): string[] {
     const dates: Date[] = [];
 
     const datapointResolution =
-        (endDate.getTime() - startDate.getTime()) / MILLIS_IN_DAY / (datapointNumberVisible - 1) // -1 to include the last day
+        Math.max(1, Math.floor((endDate.getTime() - startDate.getTime()) / MILLIS_IN_DAY / (datapointNumberVisible - 1))); // -1 to include the last day
 
     const currentDate = new Date(endDate);
 
@@ -63,7 +71,7 @@ function getDatesInRange(startDate: Date, endDate: Date, datapointNumberVisible:
         currentDate.setDate(currentDate.getDate() - datapointResolution);
     }
 
-    dates.reverse() // starting from oldest
+    dates.reverse(); // starting from oldest
 
     return dates.map(date => date.toISOString().split('T')[0]);
 }
@@ -75,12 +83,12 @@ async function fetchGameData(
 
     const fetchPromises = dateRange.map(async (date) => {
         const response = await fetch(`/data/${date}.csv`);
-        return {date, text: await response.text()};
+        return { date, text: await response.text() };
     });
 
     const results = await Promise.all(fetchPromises);
 
-    const parseTextToGameData = results.map(({date, text}) => {
+    const parseTextToGameData = results.map(({ date, text }) => {
         return new Promise<GameData[]>((resolve, reject) => {
             Papa.parse(text, {
                 header: true,
@@ -91,6 +99,13 @@ async function fetchGameData(
             });
         });
     });
+
     const processedData = await Promise.all(parseTextToGameData);
-    return processedData.map((data, index) => ({day: dateRange[index], data}));
+    return processedData.map((data, index) => ({ day: dateRange[index], data }));
+}
+
+interface GameData {
+    rank: number;
+    name: string;
+    link: string;
 }
