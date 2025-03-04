@@ -5,7 +5,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useGameDataStore } from "./useGameDataStore.ts";
 
 export const DateRangeControls: React.FC = () => {
-    // IMPORTANT: Use primitive selectors to avoid infinite loops
+
     const datapointNumberVisible = useDateStore(state => state.datapointNumberVisible);
     const setDatapointNumberVisible = useDateStore(state => state.setDatapointNumberVisible);
     const minDateDisplayed = useDateStore(state => state.minDateDisplayed);
@@ -14,7 +14,6 @@ export const DateRangeControls: React.FC = () => {
     const calculateVisibleGamesData = useGameDataStore(state => state.calculateVisibleGamesData);
     const dailyGameData = useGameDataStore(state => state.dailyGameData);
 
-    // Local state for form inputs
     const [topRanksShowed, setTopRanksShowed] = useState(100);
     const [inFormDatapointNumber, setInFormDatapointNumber] = useState(datapointNumberVisible);
     const [inFormTopRanksShowed, setInFormTopRanksShowed] = useState(topRanksShowed);
@@ -43,6 +42,7 @@ export const DateRangeControls: React.FC = () => {
 
     // Update visible games data when topRanksShowed changes
     useEffect(() => {
+        console.log('Top ranks showed changed');
         if (dailyGameData.length > 0) {
             calculateVisibleGamesData(topRanksShowed);
         }

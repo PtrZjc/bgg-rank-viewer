@@ -1,12 +1,8 @@
 // useGameData.ts
-import { useEffect } from 'react';
-import {
-    DailyGameData,
-    MILLIS_IN_DAY,
-    useDateStore
-} from './state.ts';
+import {useEffect, useMemo} from 'react';
+import {DailyGameData, MILLIS_IN_DAY, useDateStore} from './state.ts';
 import Papa from "papaparse";
-import { useGameDataStore } from "./useGameDataStore.ts";
+import {useGameDataStore} from "./useGameDataStore.ts";
 
 export function useGameData() {
     // Use individual selectors for better performance
@@ -24,6 +20,8 @@ export function useGameData() {
     useEffect(() => {
         let isMounted = true;
 
+        console.log("minDate", minDate);
+        console.log("maxDate", maxDate);
         const loadData = async () => {
             setLoading(true);
             setError(null);
@@ -55,7 +53,7 @@ export function useGameData() {
         };
     }, [minDate, maxDate, datapointNumberVisible]);
 
-    return { loading, error };
+    return {loading, error};
 }
 
 function getDatesInRange(startDate: Date, endDate: Date, datapointNumberVisible: number): string[] {
@@ -83,12 +81,12 @@ async function fetchGameData(
 
     const fetchPromises = dateRange.map(async (date) => {
         const response = await fetch(`/data/${date}.csv`);
-        return { date, text: await response.text() };
+        return {date, text: await response.text()};
     });
 
     const results = await Promise.all(fetchPromises);
 
-    const parseTextToGameData = results.map(({ date, text }) => {
+    const parseTextToGameData = results.map(({date, text}) => {
         return new Promise<GameData[]>((resolve, reject) => {
             Papa.parse(text, {
                 header: true,
@@ -101,7 +99,7 @@ async function fetchGameData(
     });
 
     const processedData = await Promise.all(parseTextToGameData);
-    return processedData.map((data, index) => ({ day: dateRange[index], data }));
+    return processedData.map((data, index) => ({day: dateRange[index], data}));
 }
 
 interface GameData {

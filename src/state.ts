@@ -43,7 +43,7 @@ export const useDateStore = create<{
     setError: (error: string | null) => void
 }>()(set => ({
     minDate: ZERO_DATE, // used to actual data fetching
-    maxDate: new Date(),
+    maxDate: plusDays(ZERO_DATE, DAYS_FROM_ZERO_DATE_TO_TODAY),
     minDateDisplayed: ZERO_DATE, // used to display the date range
     maxDateDisplayed: new Date(),
     datapointNumberVisible: 50,
