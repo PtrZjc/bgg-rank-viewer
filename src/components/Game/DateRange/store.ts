@@ -1,27 +1,5 @@
 import { create } from 'zustand'
 
-// global types
-export type GameData = {
-    rank: number;
-    name: string;
-    link: string;
-}
-
-export type DailyGameData = {
-    day: string;
-    data: GameData[];
-}
-
-export type SupplementedGameData = GameData & { // TBD
-    // rankDifference: number
-    // color: string
-}
-
-export type GameDayRanks = {
-    day: string;
-    [gameName: string]: number | string;
-}
-
 // global constants
 export const ZERO_DATE = new Date('2024-04-01');
 export const MILLIS_IN_DAY = 1000 * 60 * 60 * 24;
