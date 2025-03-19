@@ -1,8 +1,8 @@
-import { useDebouncedCallback } from "use-debounce";
-import { DAYS_FROM_ZERO_DATE_TO_TODAY, useDateStore } from "./store.ts";
-import { DateRangeSlider } from "./DateRangeSlider.tsx";
-import { useEffect, useState, useCallback } from "react";
-import { useGameDataStore } from "components/Game/useGameDataStore.ts";
+import {useDebouncedCallback} from "use-debounce";
+import {DAYS_FROM_ZERO_DATE_TO_TODAY, useDateStore} from "./store.ts";
+import {DateRangeSlider} from "./DateRangeSlider.tsx";
+import {useCallback, useEffect, useState} from "react";
+import {useGameDataStore} from "components/Game/useGameDataStore.ts";
 
 export const DateRangeControls: React.FC = () => {
   const datapointNumberVisible = useDateStore(
@@ -13,6 +13,8 @@ export const DateRangeControls: React.FC = () => {
   );
   const minDateDisplayed = useDateStore((state) => state.minDateDisplayed);
   const maxDateDisplayed = useDateStore((state) => state.maxDateDisplayed);
+  const setDatesAsDaysAfterZeroDate = useDateStore(state => state.setDatesAsDaysAfterZeroDate);
+  const setDisplayDatesAsDaysAfterZeroDate = useDateStore(state => state.setDisplayDatesAsDaysAfterZeroDate);
 
   const calculateVisibleGamesData = useGameDataStore(
     (state) => state.calculateVisibleGamesData
@@ -70,6 +72,14 @@ export const DateRangeControls: React.FC = () => {
     setInFormDatapointNumber(datapointNumberVisible);
   }, [datapointNumberVisible]);
 
+  const handleRangeChange = useCallback((min: number, max: number) => {
+    setDatesAsDaysAfterZeroDate(min, max);
+  }, [setDatesAsDaysAfterZeroDate]);
+
+  const handleDisplayRangeChange = useCallback((min: number, max: number) => {
+    setDisplayDatesAsDaysAfterZeroDate(min, max);
+  }, [setDisplayDatesAsDaysAfterZeroDate]);
+
   const outerContainerStyle = "rounded-lg shadow";
   const inputStyle = "w-full border p-2 rounded text-center";
   const labelStyle = "block font-medium";
@@ -101,8 +111,10 @@ export const DateRangeControls: React.FC = () => {
       <div className="col-span-2 flex flex-col">
         <div className="grow"></div>
         <div>
-          {/* TO_DISCUSS: We can probably pass state directly with props instead of binding DateRangeSlider to the store */}
-          <DateRangeSlider />
+          <DateRangeSlider
+            onRangeChange={handleRangeChange}
+            onDisplayRangeChange={handleDisplayRangeChange}
+          />
         </div>
         <div className="flex">
           <div className="my-2">
