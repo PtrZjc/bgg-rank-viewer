@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { DailyGameData, GameDayRanks, SupplementedGameData } from "./state.ts";
+import { DailyGameData, GameDayRanks, SupplementedGameData } from "src/types";
 
 // Create the store with simpler selectors to avoid infinite loops
 export const useGameDataStore = create<{

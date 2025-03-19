@@ -1,0 +1,1 @@
+Probably we should keep /src/components/Game (or its descendants) here instead of /src/components and leave /src/components to generic components.

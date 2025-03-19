@@ -1,7 +1,7 @@
 import React from 'react';
-import { DateRangeControls } from './DateRangeControls';
-import { GameChart } from './GameChart';
-import { DebugToggle } from "./DebugToggle.tsx";
+import { DateRangeControls } from 'components/Game/DateRange/DateRangeControls';
+import { GameChart } from "components/Game/GameChart/GameChart.tsx";
+import { DebugToggle } from "components/utils/development/DebugToggle.tsx";
 
 export const App: React.FC = () => {
     return (

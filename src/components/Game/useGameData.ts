@@ -1,6 +1,7 @@
 // useGameData.ts
 import {useEffect, useMemo} from 'react';
-import {DailyGameData, MILLIS_IN_DAY, useDateStore} from './state.ts';
+import {MILLIS_IN_DAY, useDateStore} from 'src/components/Game/DateRange/store.ts';
+import {DailyGameData} from 'src/types.ts';
 import Papa from "papaparse";
 import {useGameDataStore} from "./useGameDataStore.ts";
 

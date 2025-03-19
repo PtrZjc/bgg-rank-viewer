@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {DAYS_FROM_ZERO_DATE_TO_TODAY, useDateStore} from './state.ts';
+import {DAYS_FROM_ZERO_DATE_TO_TODAY, useDateStore} from "src/components/Game/DateRange/store"
 import RangeSlider from 'react-range-slider-input';
 import 'react-range-slider-input/dist/style.css';
 
