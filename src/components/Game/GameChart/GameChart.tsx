@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, {useMemo} from "react";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -10,9 +10,9 @@ import {
   Tooltip,
   TooltipItem,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
-import { useGameData } from "components/Game/useGameData";
-import { useGameDataStore } from "components/Game/useGameDataStore";
+import {Line} from "react-chartjs-2";
+import {useGameData} from "components/Game/useGameData";
+import {useGameDataStore} from "components/Game/useGameDataStore";
 
 ChartJS.register(
   CategoryScale,
@@ -37,7 +37,7 @@ const lineColors = [
 ];
 
 export const GameChart: React.FC = () => {
-  const { loading, error } = useGameData();
+  const {loading, error} = useGameData();
 
   const dataset = useGameDataStore((state) => state.dataset);
   const allGameNames = useGameDataStore((state) => state.allGameNames);
@@ -115,8 +115,8 @@ export const GameChart: React.FC = () => {
     },
   };
 
-  const { labels, datasets } = useMemo(() => {
-    if (dataset.length === 0) return { labels: [], datasets: [] };
+  const {labels, datasets} = useMemo(() => {
+    if (dataset.length === 0) return {labels: [], datasets: []};
 
     const labels = dataset.map((entry) =>
       new Date(entry.day).toLocaleDateString()
@@ -139,7 +139,7 @@ export const GameChart: React.FC = () => {
       pointHitRadius: 10,
     }));
 
-    return { labels, datasets };
+    return {labels, datasets};
   }, [dataset, visibleGamesData]);
 
   if (loading) {
@@ -162,44 +162,26 @@ export const GameChart: React.FC = () => {
   const chartHeight = visibleGamesData.length * rowHeight;
 
   return (
-    <div style={{ height: `${chartHeight}px` }} className="w-full">
+    <div style={{height: `${chartHeight}px`}} className="w-full">
       <div className="flex h-full">
-        {/* Left column - Ranks */}
-        <div className="h-full flex flex-col">
-          {visibleGamesData.map(({ rank }, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-items-end pr-1"
-              style={{ height: `${rowHeight}px` }}
-            >
-              <p
-                style={{ color: `${lineColors[index % lineColors.length]}` }}
-                className="text-lg truncate w-full"
-              >
-                {rank}.
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Middle column - Chart */}
+        {/* Left column - Chart */}
         <div className="flex-grow h-full">
-          <Line options={options} data={{ labels, datasets }} />
+          <Line options={options} data={{labels, datasets}}/>
         </div>
 
         {/* Right column - Game names */}
         <div className="h-full flex flex-col">
-          {visibleGamesData.map(({ name }, index) => (
+          {visibleGamesData.map(({name, rank, link}, index) => (
             <div
               key={index}
               className="flex items-center pl-1"
-              style={{ height: `${rowHeight}px` }}
+              style={{height: `${rowHeight}px`}}
             >
               <p
-                style={{ color: `${lineColors[index % lineColors.length]}` }}
+                style={{color: `${lineColors[index % lineColors.length]}`}}
                 className="text-lg truncate w-full"
               >
-                {name}
+                {rank}. <a href={`https://boardgamegeek.com${link}`}>{name}</a>
               </p>
             </div>
           ))}
