@@ -171,22 +171,57 @@ export const GameChart: React.FC = () => {
 
         {/* Right column - Game names */}
         <div className="h-full flex flex-col">
-          {visibleGamesData.map(({name, rank, link}, index) => (
-            <div
-              key={index}
-              className="flex items-center pl-1"
-              style={{height: `${rowHeight}px`}}
-            >
-              <p
-                style={{color: `${lineColors[index % lineColors.length]}`}}
-                className="text-lg truncate w-full"
+          {visibleGamesData.map(({name, rank, link, rankDifference}, index) => {
+            // Handle the fallback logic: NaN becomes undefined, otherwise use the value
+            return (
+              <div
+                key={index}
+                className="flex items-center pl-1"
+                style={{height: `${rowHeight}px`}}
               >
-                {rank}. <a href={`https://boardgamegeek.com${link}`}>{name}</a>
-              </p>
-            </div>
-          ))}
+                <p
+                  style={{color: `${lineColors[index % lineColors.length]}`}}
+                  className="text-lg flex items-center w-full"
+                >
+                  <span className="mr-1">{rank}.</span>
+                  <a href={`https://boardgamegeek.com${link}`} className="truncate">{name}</a>
+                  {(rankDifference == 0 || rankDifference) && (
+                    <span
+                      className={`text-xs ml-2 px-1 py-0.5 rounded-full font-medium ${getTagColorClass(rankDifference)}`}
+                    >
+                    {rankDifference > 0 ? `+${rankDifference}` : rankDifference}
+                  </span>
+                  )}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
+
+// Calculate color intensity based on rank difference
+function getTagColorClass(rankDifference: number) {
+  let tagColorClass = '';
+  const absValue = Math.abs(rankDifference);
+  const intensity = Math.min(absValue / 100, 1);
+
+  if (rankDifference === 0) {
+    tagColorClass = 'bg-white text-blue-600'
+  } else if (rankDifference > 0) {
+    if (intensity < 0.2) tagColorClass = 'bg-green-50 text-green-600';
+    else if (intensity < 0.4) tagColorClass = 'bg-green-100 text-green-700';
+    else if (intensity < 0.6) tagColorClass = 'bg-green-200 text-green-800';
+    else if (intensity < 0.8) tagColorClass = 'bg-green-300 text-green-900';
+    else tagColorClass = 'bg-green-400 text-green-900';
+  } else {
+    if (intensity < 0.2) tagColorClass = 'bg-red-50 text-red-600';
+    else if (intensity < 0.4) tagColorClass = 'bg-red-100 text-red-700';
+    else if (intensity < 0.6) tagColorClass = 'bg-red-200 text-red-800';
+    else if (intensity < 0.8) tagColorClass = 'bg-red-300 text-red-900';
+    else tagColorClass = 'bg-red-400 text-red-900';
+  }
+  return tagColorClass;
+}

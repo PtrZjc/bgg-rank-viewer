@@ -11,7 +11,7 @@ export type DailyGameData = {
 }
 
 export type SupplementedGameData = GameData & { // TBD
-    // rankDifference: number
+    rankDifference: number | undefined;
     // color: string
 }
 
