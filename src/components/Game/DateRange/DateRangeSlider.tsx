@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import RangeSlider from 'react-range-slider-input';
 import 'react-range-slider-input/dist/style.css';
-import {DAYS_FROM_ZERO_DATE_TO_TODAY} from 'src/components/Game/DateRange/store';
+import {DAYS_FROM_ZERO_DATE_TO_TODAY, DAYS_FROM_ZERO_DATE_TO_ONE_YEAR_AGO} from 'src/components/Game/DateRange/store';
 
 interface DateRangeSliderProps {
   onRangeChange: (min: number, max: number) => void;
@@ -12,7 +12,7 @@ export const DateRangeSlider: React.FC<DateRangeSliderProps> = ({
                                                                   onRangeChange,
                                                                   onDisplayRangeChange
                                                                 }) => {
-  const [sliderValues, setSliderValues] = useState<[number, number]>([0, DAYS_FROM_ZERO_DATE_TO_TODAY]);
+  const [sliderValues, setSliderValues] = useState<[number, number]>([DAYS_FROM_ZERO_DATE_TO_ONE_YEAR_AGO, DAYS_FROM_ZERO_DATE_TO_TODAY]);
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
