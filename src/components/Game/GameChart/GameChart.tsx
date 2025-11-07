@@ -122,22 +122,34 @@ export const GameChart: React.FC = () => {
       new Date(entry.day).toLocaleDateString()
     );
 
-    const datasets = allGameNames.map((gameName, index) => ({
-      label: gameName,
-      data: dataset.map((entry) => entry[gameName] as number | undefined),
-      borderColor: lineColors[index % lineColors.length],
-      backgroundColor: lineColors[index % lineColors.length],
-      tension: 0.1,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      spanGaps: true,
-      borderWidth: 1.5,
-      hoverBorderWidth: 3,
-      hoverBorderColor: lineColors[index % lineColors.length],
-      pointHoverBackgroundColor: lineColors[index % lineColors.length],
-      pointHoverBorderColor: "white",
-      pointHitRadius: 10,
-    }));
+    // Create a map from game name to its position in visibleGamesData (right side)
+    // This ensures colors match the order on the right side
+    const gameColorIndexMap = new Map(
+      visibleGamesData.map((game, index) => [game.name, index])
+    );
+
+    const datasets = allGameNames.map((gameName) => {
+      // Get the color index from the game's position in visibleGamesData
+      const colorIndex = gameColorIndexMap.get(gameName) ?? 0;
+      const color = lineColors[colorIndex % lineColors.length];
+
+      return {
+        label: gameName,
+        data: dataset.map((entry) => entry[gameName] as number | undefined),
+        borderColor: color,
+        backgroundColor: color,
+        tension: 0.1,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        spanGaps: true,
+        borderWidth: 1.5,
+        hoverBorderWidth: 3,
+        hoverBorderColor: color,
+        pointHoverBackgroundColor: color,
+        pointHoverBorderColor: "white",
+        pointHitRadius: 10,
+      };
+    });
 
     return {labels, datasets};
   }, [dataset, visibleGamesData]);
@@ -172,9 +184,7 @@ export const GameChart: React.FC = () => {
         {/* Right column - Game names */}
         <div className="h-full flex flex-col">
           {visibleGamesData.map(({name, rank, link, rankDifference}, index) => {
-            // Handle the fallback logic: NaN becomes undefined, otherwise use the value
-            // Find the color index from allGameNames to match the chart line color
-            const colorIndex = allGameNames.indexOf(name);
+            // Colors are assigned based on position in visibleGamesData (right side order)
             return (
               <div
                 key={index}
@@ -182,7 +192,7 @@ export const GameChart: React.FC = () => {
                 style={{height: `${rowHeight}px`}}
               >
                 <p
-                  style={{color: `${lineColors[colorIndex % lineColors.length]}`}}
+                  style={{color: `${lineColors[index % lineColors.length]}`}}
                   className="text-lg flex items-center w-full"
                 >
                   <span className="mr-1">{rank}.</span>
