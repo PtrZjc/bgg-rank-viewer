@@ -122,20 +122,23 @@ export const GameChart: React.FC = () => {
       new Date(entry.day).toLocaleDateString()
     );
 
-    // Create a map from game name to its position in visibleGamesData (right side)
+    // Create a map from game ID to its position in visibleGamesData (right side)
     // This ensures colors match the order on the right side
     const gameColorIndexMap = new Map(
-      visibleGamesData.map((game, index) => [game.name, index])
+      visibleGamesData.map((game, index) => [game.id.toString(), index])
     );
 
-    const datasets = allGameNames.map((gameName) => {
+    const datasets = allGameNames.map((gameId) => {
       // Get the color index from the game's position in visibleGamesData
-      const colorIndex = gameColorIndexMap.get(gameName) ?? 0;
+      const colorIndex = gameColorIndexMap.get(gameId) ?? 0;
       const color = lineColors[colorIndex % lineColors.length];
+
+      // Find the game name for the label
+      const gameName = visibleGamesData.find(g => g.id.toString() === gameId)?.name ?? gameId;
 
       return {
         label: gameName,
-        data: dataset.map((entry) => entry[gameName] as number | undefined),
+        data: dataset.map((entry) => entry[gameId] as number | undefined),
         borderColor: color,
         backgroundColor: color,
         tension: 0.1,
