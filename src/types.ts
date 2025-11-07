@@ -1,6 +1,7 @@
 // global types
 export type GameData = {
     rank: number;
+    id: number;
     name: string;
     link: string;
 }
@@ -17,5 +18,5 @@ export type SupplementedGameData = GameData & { // TBD
 
 export type GameDayRanks = {
     day: string;
-    [gameName: string]: number | string;
+    [gameId: string]: number | string;
 }
