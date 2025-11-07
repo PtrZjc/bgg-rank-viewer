@@ -173,6 +173,8 @@ export const GameChart: React.FC = () => {
         <div className="h-full flex flex-col">
           {visibleGamesData.map(({name, rank, link, rankDifference}, index) => {
             // Handle the fallback logic: NaN becomes undefined, otherwise use the value
+            // Find the color index from allGameNames to match the chart line color
+            const colorIndex = allGameNames.indexOf(name);
             return (
               <div
                 key={index}
@@ -180,7 +182,7 @@ export const GameChart: React.FC = () => {
                 style={{height: `${rowHeight}px`}}
               >
                 <p
-                  style={{color: `${lineColors[index % lineColors.length]}`}}
+                  style={{color: `${lineColors[colorIndex % lineColors.length]}`}}
                   className="text-lg flex items-center w-full"
                 >
                   <span className="mr-1">{rank}.</span>
