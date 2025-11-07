@@ -4,9 +4,14 @@ import { DailyGameData } from 'src/types'
 
 describe('useGameDataStore', () => {
   beforeEach(() => {
-    // Reset store to initial state
-    const state = useGameDataStore.getState()
-    state.setDailyGameDataAndDataset([])
+    // Reset store to initial state by setting empty data
+    useGameDataStore.setState({
+      dailyGameData: [],
+      dataset: [],
+      visibleGamesData: [],
+      visibleGameNames: [],
+      allGameNames: [],
+    })
   })
 
   describe('initial state', () => {
@@ -84,15 +89,24 @@ describe('useGameDataStore', () => {
       const mockData: DailyGameData[] = [
         {
           day: new Date('2024-04-01'),
-          data: [{ rank: 1, id: '1', name: 'Game A' }],
+          data: [
+            { rank: 1, id: '1', name: 'Game A' },
+            { rank: 2, id: '2', name: 'Game B' },
+          ],
         },
         {
           day: new Date('2024-04-02'),
-          data: [{ rank: 2, id: '1', name: 'Game A' }],
+          data: [
+            { rank: 2, id: '1', name: 'Game A' },
+            { rank: 1, id: '2', name: 'Game B' },
+          ],
         },
         {
           day: new Date('2024-04-03'),
-          data: [{ rank: 3, id: '1', name: 'Game A' }],
+          data: [
+            { rank: 3, id: '1', name: 'Game A' },
+            { rank: 1, id: '2', name: 'Game B' },
+          ],
         },
       ]
 
@@ -189,32 +203,44 @@ describe('useGameDataStore', () => {
       expect(state.visibleGamesData[2].rank).toBe(3)
     })
 
-    it('returns empty arrays when no data', () => {
-      // Reset to empty data
-      const { setDailyGameDataAndDataset, calculateVisibleGamesData } =
-        useGameDataStore.getState()
+    it('returns empty when no data exists', () => {
+      // Explicitly clear the store (nested beforeEach set up data)
+      useGameDataStore.setState({
+        dailyGameData: [],
+        dataset: [],
+        visibleGamesData: [],
+        visibleGameNames: [],
+        allGameNames: [],
+      })
 
-      setDailyGameDataAndDataset([])
+      const { calculateVisibleGamesData } = useGameDataStore.getState()
+
       calculateVisibleGamesData(5)
 
       const state = useGameDataStore.getState()
 
+      // When there's no data, calculateVisibleGamesData returns state unchanged
       expect(state.visibleGamesData).toEqual([])
       expect(state.visibleGameNames).toEqual([])
     })
 
     it('handles games with no historical data (undefined rankDifference)', () => {
       // Add a game that only appears in the last day
+      // Note: We need at least 2 games per day to pass the filter (>2 keys including 'day')
       const mockDataWithNewGame: DailyGameData[] = [
         {
           day: new Date('2024-04-01'),
-          data: [{ rank: 1, id: '1', name: 'Old Game' }],
+          data: [
+            { rank: 1, id: '1', name: 'Old Game' },
+            { rank: 2, id: '3', name: 'Another Old Game' },
+          ],
         },
         {
           day: new Date('2024-04-02'),
           data: [
             { rank: 1, id: '2', name: 'New Game' },
             { rank: 2, id: '1', name: 'Old Game' },
+            { rank: 3, id: '3', name: 'Another Old Game' },
           ],
         },
       ]
@@ -231,7 +257,7 @@ describe('useGameDataStore', () => {
         (game) => game.name === 'New Game'
       )
 
-      // New game has no rank difference
+      // New game has no rank difference because it didn't appear in first day
       expect(newGame?.rankDifference).toBeUndefined()
     })
   })
