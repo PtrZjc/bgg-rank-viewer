@@ -80,8 +80,13 @@ async function fetchGameData(
 ): Promise<DailyGameData[]> {
     if (!dateRange.length) return [];
 
+    // In production, fetch from S3 bucket directly; in dev, use local /data folder
+    const dataUrlBase = import.meta.env.PROD
+        ? 'https://bgg-rank-scrapes.s3.amazonaws.com'
+        : '/data';
+
     const fetchPromises = dateRange.map(async (date) => {
-        const response = await fetch(`/data/${date}.csv`);
+        const response = await fetch(`${dataUrlBase}/${date}.csv`);
         return {date, text: await response.text()};
     });
 
