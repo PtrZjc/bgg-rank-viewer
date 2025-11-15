@@ -105,7 +105,6 @@ async function fetchGameData(
 
 interface GameData {
     rank: number;
-    id: number;
     name: string;
     link: string;
 }

@@ -21,13 +21,13 @@ export const useGameDataStore = create<{
   setDailyGameDataAndDataset: (dailyGameData: DailyGameData[]) => {
     // Process data before setting the state
     const dataset = dailyGameData.map(({day, data}) =>
-      data.reduce((acc, {id, rank}) => ({
+      data.reduce((acc, {name, rank}) => ({
         ...acc,
-        [id]: rank
+        [name]: rank
       }), {day} as GameDayRanks)
     ).filter(dayRanks => Object.keys(dayRanks).length > 2);
 
-    // Compute the allGameNames (now game IDs) just once here
+    // Compute the allGameNames just once here
     const allGameNames = Array.from(new Set(
       dataset.flatMap(dayRanks =>
         Object.keys(dayRanks).filter(key => key !== 'day')
@@ -54,8 +54,8 @@ export const useGameDataStore = create<{
     const lastDayArray = lastDayData.data
       .filter(({rank}) => rank <= topRanksShowed)
       .map((game) => {
-        const firstDayRank = firstVisibleDay[game.id] as number | undefined;
-        const lastDayRank = lastVisibleDay[game.id] as number;
+        const firstDayRank = firstVisibleDay[game.name] as number | undefined;
+        const lastDayRank = lastVisibleDay[game.name] as number;
         const rankDifference = (firstDayRank !== undefined && !isNaN(firstDayRank))
           ? firstDayRank - lastDayRank
           : undefined;
@@ -69,7 +69,7 @@ export const useGameDataStore = create<{
 
     return {
       visibleGamesData: lastDayArray,
-      visibleGameNames: lastDayArray.map(game => game.id.toString())
+      visibleGameNames: lastDayArray.map(game => game.name)
     };
   })
 }));
