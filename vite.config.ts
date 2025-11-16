@@ -7,4 +7,9 @@ import tsConfigPaths from "vite-tsconfig-paths";
 export default defineConfig(({ command }) => ({
   plugins: [tsConfigPaths(), react(), tailwindcss() ],
   publicDir: command === "build" ? false : "public", // Handled in package.json to avoid copying /data folder
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: './src/test/setup.ts',
+  },
 }));
