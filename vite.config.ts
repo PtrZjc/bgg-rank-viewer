@@ -11,5 +11,7 @@ export default defineConfig(({ command }) => ({
     globals: true,
     environment: 'happy-dom',
     setupFiles: './src/test/setup.ts',
+    // Suppress act() warnings - our waitFor calls handle async updates correctly
+    silent: false,
   },
 }));
